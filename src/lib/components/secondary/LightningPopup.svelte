@@ -44,9 +44,29 @@
     // });
 
 	$: console.log($strikesresult);
+    $: latestStrike = $strikesresult.length ? $strikesresult[$strikesresult.length - 1] : null;
+
+    function formatCalendar(dateStr) {
+		let dateObj = new Date(dateStr);
+
+		let options = {
+			weekday: 'short',
+			year: 'numeric',
+			month: 'short',
+			day: 'numeric',
+            hour: '2-digit',
+			minute: '2-digit',
+			second: '2-digit',
+			hour12: false,
+			timeZone: 'Asia/Jakarta',
+			timeZoneName: 'short'
+		};
+
+		return dateObj.toLocaleString('id-ID', options);
+	}
 
 </script>
-
+<!-- 
 <div class="alert-area">
     {#each $strikesresult as strike (strike.id)}
         {#if new Date(strike.time) >= $currentDate && !strike.isActive}
@@ -68,4 +88,28 @@
             </div>
         {/if}
     {/each}
+</div> -->
+
+<!-- we don't need strike.isActive for showing live data -->
+<!-- just sort by time -->
+<div class="alert-area">
+            <div in:fade={{ duration: 1000 }} out:fade={{ duration: 1000 }}>
+                <Alert.Root variant="default" class="m-0 border-opacity-10 bg-opacity-70">
+                    <ExclamationTriangle class="h-4 w-4" />
+                    <Alert.Title>Latest Strike</Alert.Title>
+                    <Alert.Description>
+                        <Badge variant="default">{formatCalendar(latestStrike.time)} </Badge>
+                        
+                        <Badge variant="secondary">{latestStrike.distance} km</Badge>
+                        {#if latestStrike.intensity == 1}
+                            <Badge variant="blue">{latestStrike.intensity}</Badge>
+                        {:else if latestStrike.intensity > 1 && latestStrike.intensity <= 10}
+                            <Badge variant="warning">{latestStrike.intensity}</Badge>
+                        {:else}
+                            <Badge variant="destructive">{latestStrike.intensity}</Badge>
+                        {/if}
+                    </Alert.Description>
+                </Alert.Root>
+            </div>
+        
 </div>
