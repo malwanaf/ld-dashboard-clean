@@ -15,7 +15,7 @@
     import { filteredItems } from "$lib/stores/filteredItems";
     import Slider from "$lib/components/ui/slider/slider.svelte";
 	import { distanceRangeFilter } from "$lib/stores/distanceFilter";
-
+    import { maxDistance } from "$lib/stores/maxDistance";
     // Formatter for displaying dates
     const df = new DateFormatter("id-ID", {
       dateStyle: "medium",
@@ -70,7 +70,11 @@
         <label class="text-xs font-semibold" for="distance-range"> {$distanceRangeFilter[0]} - {$distanceRangeFilter[1]}</label>
     
     
-    <Slider bind:value={$distanceRangeFilter} max={100} step={1} class="max-w-[30%]" />
+        {#if $maxDistance > 0}
+        <Slider bind:value={$distanceRangeFilter} max={$maxDistance} step={1} class="max-w-[30%]" />
+      {:else}
+        <Slider bind:value={$distanceRangeFilter} max={100} step={1} class="max-w-[30%]" />
+      {/if}
   </div>
 
   
