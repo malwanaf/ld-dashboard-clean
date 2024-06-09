@@ -12,10 +12,13 @@
 	import { strikesresult } from '$lib/stores/strikes';
 	import { dbstatus } from '$lib/stores/dbstatus';
 	import DatePicker from '$lib/components/secondary/DatePicker.svelte';
+	
 
 	// Implement isActive (from MainComponent.svelte)
 	import { toggleIsActive } from '$lib/functions/toggleIsActive';
 	import { filteredItems } from '$lib/stores/filteredItems';
+	import { distanceRangeFilter } from '$lib/stores/distanceFilter';
+	import Slider from '$lib/components/ui/slider/slider.svelte';
 	let items;
 
 	$: items = $strikesresult;
@@ -121,11 +124,13 @@
 	}
 
 	let showAll = false;
+	
+	
 </script>
 
 <div class="flex h-full flex-col overflow-hidden p-4">
 	<div class="mb-2 flex flex-col items-center justify-between sm:flex-row">
-		<div class="flex w-full flex-col space-y-2 sm:w-auto sm:flex-row sm:space-x-2 sm:space-y-0">
+		<div class="flex w-full flex-col space-y-2 sm:w-auto sm:flex-row sm:space-x-2 sm:space-y-0 flex-grow">
 			<Button on:click={exportToCSV} class="mt-2 sm:mt-0" variant="default">Export to CSV</Button>
 			<DatePicker />
 		</div>
@@ -212,6 +217,16 @@
 						</Table.Row>
 					</Table.Header>
 					<Table.Body>
+						{#if $filteredItems.length === 0 && !showAll}
+							<Table.Row>
+								<Table.Cell colspan="4" class="items-center">
+									<div class="flex items-center space-x-2">
+										<Label class="text-lg">No data found</Label>
+									</div>
+								</Table.Cell>
+							</Table.Row>
+						{/if}
+						
 						{#if !$strikesresult || $strikesresult.length === 0}
 							<Table.Row>
 								<Table.Cell colspan="4" class="items-center">

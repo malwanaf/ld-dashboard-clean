@@ -13,6 +13,8 @@
     import * as Popover from "$lib/components/ui/popover";
     import { dateRange } from "$lib/stores/dateRange";  // Adjust the import path as needed
     import { filteredItems } from "$lib/stores/filteredItems";
+    import Slider from "$lib/components/ui/slider/slider.svelte";
+	import { distanceRangeFilter } from "$lib/stores/distanceFilter";
 
     // Formatter for displaying dates
     const df = new DateFormatter("id-ID", {
@@ -58,5 +60,17 @@
         />
       </Popover.Content>
     </Popover.Root>
+    
   </div>
+
+  
+  <div class="flex flex-row w-full items-center gap-2 space-x-2">
+    
+        <label class="text-xs" for="distance-range">Distance Range :</label>
+        <label class="text-xs font-semibold" for="distance-range"> {$distanceRangeFilter[0]} - {$distanceRangeFilter[1]}</label>
+    
+    
+    <Slider bind:value={$distanceRangeFilter} max={100} step={1} class="max-w-[30%]" />
+  </div>
+
   
