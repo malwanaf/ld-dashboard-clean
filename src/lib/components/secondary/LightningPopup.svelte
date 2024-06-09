@@ -93,11 +93,14 @@
 <!-- we don't need strike.isActive for showing live data -->
 <!-- just sort by time -->
 <div class="alert-area">
+    {#if latestStrike != null}
             <div in:fade={{ duration: 1000 }} out:fade={{ duration: 1000 }}>
                 <Alert.Root variant="default" class="m-0 border-opacity-10 bg-opacity-70">
                     <ExclamationTriangle class="h-4 w-4" />
                     <Alert.Title>Latest Strike</Alert.Title>
                     <Alert.Description>
+                        
+                
                         <Badge variant="default">{formatCalendar(latestStrike.time)} </Badge>
                         
                         <Badge variant="secondary">{latestStrike.distance} km</Badge>
@@ -111,5 +114,5 @@
                     </Alert.Description>
                 </Alert.Root>
             </div>
-        
+        {/if}
 </div>
