@@ -3,6 +3,8 @@
 	import L from 'leaflet';
 	import 'leaflet/dist/leaflet.css';
 	import { strikesresult } from '$lib/stores/strikes';
+	import { showedItemsId } from '$lib/stores/showedItems';
+	import { filteredItems } from '$lib/stores/filteredItems';
 
 	export let bounds: L.LatLngBoundsExpression | undefined = undefined;
 	export let view: L.LatLngExpression | undefined = undefined;
@@ -15,12 +17,14 @@
 	let map: L.Map | undefined;
 	let mapElement: HTMLElement;
 
+	const strikeCircles = new Map();
+
 	onMount(() => {
 		if (!bounds && (!view || !zoom)) {
 			throw new Error('Must set either bounds, or view and zoom.');
 		}
 
-		map = L.map(mapElement, { zoomControl: false, attributionControl:false })
+		map = L.map(mapElement, { zoomControl: false, attributionControl: false })
 			.on('zoom', (e) => dispatch('zoom', e))
 			.on('popupopen', async (e) => {
 				await tick();
@@ -28,7 +32,7 @@
 			});
 
 		L.tileLayer(
-			'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{
+			'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
 				minZoom: 0,
 				maxZoom: 19,
 			}
@@ -58,35 +62,106 @@
 		const specificStrikeLayerGroup = L.layerGroup().addTo(map);
 
 		const processedStrikes = new Set();
-		function onStrikeResult(id){
-			if ($strikesresult.filter(strike => strike.id === id).length > 0){
-				return true;
-			}else{
-				return false;
-			}
-		}
 
-		const unsubscribe3 = strikesresult.subscribe((StrikesData) => {
-			StrikesData.forEach((strike) => {
-				if(strike.isActive){
-					console.log("Strike Activated");
-				const radius = calculateRadius(strike.distance);
-				const color = getColorByIntensity(strike.intensity);
-				
-					const circle = L.circle(center, {
-					color: color, // Border color based on intensity
-					opacity: 0.8, // Border opacity
-					fillColor: color, // Fill color based on intensity
-					fillOpacity: 0, // Increased fill opacity
-					radius: radius,
-					weight: 6
-				}).addTo(specificStrikeLayerGroup);
-			}				
-			});		
-		});
 		
-		
-		
+		// const unsubscribe4 = showedItemsId.subscribe((StrikesData) => {
+		// 	StrikesData.forEach((strike) => {
+		// 		if (strike.isActive) {
+		// 			const radius = calculateRadius(strike.distance);
+		// 			const color = getColorByIntensity(strike.intensity);
+
+		// 			let circle = strikeCircles.get(strike.id);
+
+		// 			if (circle) {
+		// 				circle.setStyle({
+		// 					color: color,
+		// 					opacity: 0.8,
+		// 					fillColor: color,
+		// 					fillOpacity: 0,
+		// 					radius: radius,
+		// 					weight: 6
+		// 				});
+		// 			} else {
+		// 				circle = L.circle(center, {
+		// 					color: color,
+		// 					opacity: 0.8,
+		// 					fillColor: color,
+		// 					fillOpacity: 0,
+		// 					radius: radius,
+		// 					weight: 6
+		// 				}).addTo(specificStrikeLayerGroup);
+
+		// 				strikeCircles.set(strike.id, circle);
+		// 			}
+		// 		} else {
+		// 			const circle = strikeCircles.get(strike.id);
+		// 			if (circle) {
+		// 				specificStrikeLayerGroup.removeLayer(circle);
+		// 				strikeCircles.delete(strike.id);
+		// 			}
+		// 		}
+		// 	});
+		// });
+
+
+		let previousStrikes = new Map();
+
+const unsubscribe3 = filteredItems.subscribe((StrikesData) => {
+    const newStrikes = new Map();
+    
+    StrikesData.forEach((strike) => {
+        newStrikes.set(strike.id, strike);
+        
+        if (strike.isActive) {
+            const radius = calculateRadius(strike.distance);
+            const color = getColorByIntensity(strike.intensity);
+            
+            let circle = strikeCircles.get(strike.id);
+            
+            if (circle) {
+                circle.setStyle({
+                    color: color,
+                    opacity: 0.8,
+                    fillColor: color,
+                    fillOpacity: 0,
+                    radius: radius,
+                    weight: 6
+                });
+            } else {
+                circle = L.circle(center, {
+                    color: color,
+                    opacity: 0.8,
+                    fillColor: color,
+                    fillOpacity: 0,
+                    radius: radius,
+                    weight: 6
+                }).addTo(specificStrikeLayerGroup);
+                
+                strikeCircles.set(strike.id, circle);
+            }
+        } else {
+            const circle = strikeCircles.get(strike.id);
+            if (circle) {
+                specificStrikeLayerGroup.removeLayer(circle);
+                strikeCircles.delete(strike.id);
+            }
+        }
+    });
+    
+    // Remove circles for strikes that are no longer in the new data
+    previousStrikes.forEach((strike, id) => {
+        if (!newStrikes.has(id)) {
+            const circle = strikeCircles.get(id);
+            if (circle) {
+                specificStrikeLayerGroup.removeLayer(circle);
+                strikeCircles.delete(id);
+            }
+        }
+    });
+    
+    // Update previousStrikes to be the new set of strikes
+    previousStrikes = newStrikes;
+});
 
 
 		const unsubscribe = strikesresult.subscribe((strikesData) => {
@@ -100,7 +175,7 @@
 				const strikeTime = new Date(strike.time);
 
 				// Only process strikes with a timestamp >= currentTime
-				if (strikeTime >= adjustedCurrentTime  && !processedStrikes.has(strike.id)) {
+				if (strikeTime >= adjustedCurrentTime && !processedStrikes.has(strike.id)) {
 					delay += 0; // Delay for each data point to simulate real-time
 
 					setTimeout(() => {

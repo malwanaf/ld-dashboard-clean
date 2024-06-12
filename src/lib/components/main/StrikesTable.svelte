@@ -8,21 +8,25 @@
 	import * as Pagination from '$lib/components/ui/pagination';
 	import Reload from 'svelte-radix/Reload.svelte';
 	import { Label } from '$lib/components/ui/label';
-	import * as Select from '$lib/components/ui/select';
-	import { strikesresult } from '$lib/stores/strikes';
+	import { mapOfStrikesResult, strikesresult } from '$lib/stores/strikes';
 	import { dbstatus } from '$lib/stores/dbstatus';
 	import DatePicker from '$lib/components/secondary/DatePicker.svelte';
-	
-
-	// Implement isActive (from MainComponent.svelte)
 	import { toggleIsActive } from '$lib/functions/toggleIsActive';
-	import { filteredItems } from '$lib/stores/filteredItems';
+	import { filteredItems, mapFilteredItems } from '$lib/stores/filteredItems';
 	import { distanceRangeFilter } from '$lib/stores/distanceFilter';
 	import Slider from '$lib/components/ui/slider/slider.svelte';
-	let items;
+	import * as Select from '$lib/components/ui/select';
+	import { writable } from 'svelte/store';
+	import Cross2 from 'svelte-radix/Cross2.svelte';
+	import * as Tooltip from "$lib/components/ui/tooltip";
+	import { showedItemsId } from '$lib/stores/showedItems';
+	// Store to keep the selected rows per page value
+	const rowsPerPage = writable(10);
 
+	
+
+	let items;
 	$: items = $strikesresult;
-	// end of Implement isActive
 
 	let currentPage = 1;
 	let itemsPerPage = 10;
@@ -36,10 +40,22 @@
 	$: latestStrike = $strikesresult.length ? $strikesresult[$strikesresult.length - 1] : null;
 	$: firstStrike = $strikesresult.length ? $strikesresult[0] : null;
 
-	function handleItemsPerPageChange(event) {
-		itemsPerPage = parseInt(event.detail);
+	$: if ($rowsPerPage !== itemsPerPage) {
+		handleItemsPerPageChange($rowsPerPage);
+	}
+
+	// Function to handle items per page change
+	function handleItemsPerPageChange(newItemsPerPage) {
+		itemsPerPage = newItemsPerPage;
 		currentPage = 1;
 	}
+
+	$: selectedRows = $rowsPerPage
+		? {
+				label: $rowsPerPage,
+				value: $rowsPerPage
+			}
+		: undefined;
 
 	function exportToCSV() {
 		try {
@@ -87,10 +103,12 @@
 		});
 	}
 
-	$: paginatedItems = $strikesresult.slice(
+	$: paginatedItems = $filteredItems.slice(
 		(currentPage - 1) * itemsPerPage,
 		currentPage * itemsPerPage
 	);
+
+
 
 	function formatDateTime(dateStr) {
 		let dateObj = new Date(dateStr);
@@ -124,15 +142,47 @@
 	}
 
 	let showAll = false;
+
+	let hideShowToggleState = false;
 	
-	
+	function hideShowToggle(){
+		$showedItemsId = $strikesresult.map((strike) => {
+			strike.isActive = !strike.isActive;
+			hideShowToggleState = !hideShowToggleState;
+			return strike;
+			
+		});
+	}
+	$: checkAnyActive = $filteredItems.some((strike) => strike.isActive);
+	$: console.log(checkAnyActive);
+	function showAllFilteredItems(){
+		if($filteredItems.length != 0){
+			$strikesresult = $strikesresult.map((strike) => {
+			if (checkAnyActive){
+				strike.isActive = false;
+			}else if (!checkAnyActive){
+				strike.isActive = true;
+			}
+			
+			
+			
+			hideShowToggleState = !hideShowToggleState;
+			return strike;
+		});
+		}
+		
+	}
+
 </script>
 
 <div class="flex h-full flex-col overflow-hidden p-4">
 	<div class="mb-2 flex flex-col items-center justify-between sm:flex-row">
-		<div class="flex w-full flex-col space-y-2 sm:w-auto sm:flex-row sm:space-x-2 sm:space-y-0 flex-grow">
+		<div
+			class="flex w-full flex-grow flex-col space-y-2 sm:w-auto sm:flex-row sm:space-x-2 sm:space-y-0"
+		>
 			<Button on:click={exportToCSV} class="mt-2 sm:mt-0" variant="default">Export to CSV</Button>
 			<DatePicker />
+			
 		</div>
 		<div class="mt-2 flex items-center space-x-2 sm:mt-0">
 			<span class="w-full text-sm text-gray-600 dark:text-gray-200 sm:w-auto">
@@ -142,12 +192,12 @@
 				<span class="text-sm text-gray-500">DB:</span>
 				<span class="h-3 w-3 rounded-full" style="background-color: {$dbstatus};"></span>
 			</span>
-			<Button on:click={toggleMode} variant="outline" size="icon">
+			<Button on:click={toggleMode} variant="outline" size="icon" >
 				<Sun
 					class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"
 				/>
 				<Moon
-					class="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100"
+					class="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 "
 				/>
 				<span class="sr-only">Toggle theme</span>
 			</Button>
@@ -163,22 +213,31 @@
 		<div class="flex flex-grow flex-col overflow-hidden">
 			<div class="mb-2 flex items-center justify-between">
 				<span class="text-sm text-gray-700 dark:text-gray-400"
-					>Total Items: {$strikesresult.length}</span
-				>
+					>Total Items:
+					{#if showAll}
+						{$strikesresult.length}
+					{:else if !showAll}
+						{$filteredItems.length}
+					{/if}
+				</span>
 
 				<div class="flex w-auto items-center space-x-1 sm:w-auto">
 					<label for="itemsPerPage" class="mr-2 text-sm text-gray-700 dark:text-gray-400"
 						>Rows per page:</label
 					>
-					<Select.Root>
+					<Select.Root
+						selected={selectedRows}
+						onSelectedChange={(v) => {
+							v && ($rowsPerPage = v.value);
+						}}
+					>
 						<Select.Trigger class="w-auto">
-							<Select.Value placeholder="10" />
+							<Select.Value placeholder="Rows per page" />
 						</Select.Trigger>
-						<Select.Content on:change={handleItemsPerPageChange}>
-							{#each rowsPerPageOptions as option}
-								<Select.Item value={option} selected={option === itemsPerPage}>{option}</Select.Item
-								>
-							{/each}
+						<Select.Content>
+							<Select.Item value="10" label="10">10</Select.Item>
+							<Select.Item value="20" label="20">20</Select.Item>
+							<Select.Item value="50" label="50">50</Select.Item>
 						</Select.Content>
 					</Select.Root>
 				</div>
@@ -212,24 +271,60 @@
 								</Button>
 							</Table.Head>
 							<Table.Head class="text-center">
-								<Button class="pl-0 text-left" variant="ghost">Actions</Button>
+								<Tooltip.Root>
+									<Tooltip.Trigger>			
+										<Button on:click={showAllFilteredItems} class="pl-0 text-left" variant="ghost">Actions
+										</Button>
+										</Tooltip.Trigger>
+									<Tooltip.Content>
+										<p class="text-sm leading-7 [&:not(:first-child)]:mt-6">
+											{#if hideShowToggleState || checkAnyActive}
+											
+											Hide
+										{:else}
+											Show
+										{/if}
+										All
+									</p>
+									</Tooltip.Content>
+								  </Tooltip.Root>
+								
+	
+								
+									
+									
+								
 							</Table.Head>
 						</Table.Row>
 					</Table.Header>
 					<Table.Body>
 						{#if $filteredItems.length === 0 && !showAll}
+							{#if $dbstatus === 'green'}
 							<Table.Row>
-								<Table.Cell colspan="4" class="items-center">
+								<Table.Cell colspan="5" class="items-center">
 									<div class="flex items-center space-x-2">
 										<Label class="text-lg">No data found</Label>
 									</div>
 								</Table.Cell>
 							</Table.Row>
+							{:else if $dbstatus === 'red'}
+							<Table.Row>
+								<Table.Cell colspan="5" class="items-center">
+									<div class="flex items-center space-x-2">
+										<Label class="text-lg">Database not Connected</Label>
+									</div>
+								</Table.Cell>
+							</Table.Row>
+							{/if}
+							
 						{/if}
-						
+
+					
+
+
 						{#if !$strikesresult || $strikesresult.length === 0}
 							<Table.Row>
-								<Table.Cell colspan="4" class="items-center">
+								<Table.Cell colspan="5" class="items-center">
 									<div class="flex items-center space-x-2">
 										<Reload class="mr-2 h-4 w-4 animate-spin" id="reload" />
 										<Label for="reload" class="text-lg">Loading Data ...</Label>
@@ -251,7 +346,7 @@
 								</Table.Row>
 							{/each}
 						{:else}
-							{#each $filteredItems as strike (strike.id)}
+							{#each paginatedItems as strike (strike.id)}
 								<Table.Row>
 									<Table.Cell class="text-left">{strike.id}</Table.Cell>
 									<Table.Cell class="text-left">{formatDateTime(strike.time)}</Table.Cell>
@@ -271,74 +366,73 @@
 			<div class="flex flex-col items-center justify-center">
 				<div class="mt-4">
 					{#if showAll}
-					<Pagination.Root count={$strikesresult.length} perPage={itemsPerPage} let:pages>
-						<Pagination.Content>
-							<Pagination.Item>
-								<Pagination.PrevButton
-									on:click={() => (currentPage = currentPage - 1)}
-									disabled={currentPage === 1}
-								/>
-							</Pagination.Item>
-							{#each pages as page (page.key)}
-								{#if page.type === 'ellipsis'}
-									<Pagination.Item>
-										<Pagination.Ellipsis />
-									</Pagination.Item>
-								{:else}
-									<Pagination.Item>
-										<Pagination.Link
-											{page}
-											on:click={() => (currentPage = page.value)}
-											isActive={currentPage == page.value}
-										>
-											{page.value}
-										</Pagination.Link>
-									</Pagination.Item>
-								{/if}
-							{/each}
-							<Pagination.Item>
-								<Pagination.NextButton
-									on:click={() => (currentPage = currentPage + 1)}
-									disabled={currentPage === pages.length}
-								/>
-							</Pagination.Item>
-						</Pagination.Content>
-					</Pagination.Root>
+						<Pagination.Root count={$strikesresult.length} perPage={itemsPerPage} let:pages>
+							<Pagination.Content>
+								<Pagination.Item>
+									<Pagination.PrevButton
+										on:click={() => (currentPage = currentPage - 1)}
+										disabled={currentPage === 1}
+									/>
+								</Pagination.Item>
+								{#each pages as page (page.key)}
+									{#if page.type === 'ellipsis'}
+										<Pagination.Item>
+											<Pagination.Ellipsis />
+										</Pagination.Item>
+									{:else}
+										<Pagination.Item>
+											<Pagination.Link
+												{page}
+												on:click={() => (currentPage = page.value)}
+												isActive={currentPage == page.value}
+											>
+												{page.value}
+											</Pagination.Link>
+										</Pagination.Item>
+									{/if}
+								{/each}
+								<Pagination.Item>
+									<Pagination.NextButton
+										on:click={() => (currentPage = currentPage + 1)}
+										disabled={currentPage === pages.length}
+									/>
+								</Pagination.Item>
+							</Pagination.Content>
+						</Pagination.Root>
 					{:else}
-					<Pagination.Root count={$filteredItems.length} perPage={itemsPerPage} let:pages>
-						<Pagination.Content>
-							<Pagination.Item>
-								<Pagination.PrevButton
-									on:click={() => (currentPage = currentPage - 1)}
-									disabled={currentPage === 1}
-								/>
-							</Pagination.Item>
-							{#each pages as page (page.key)}
-								{#if page.type === 'ellipsis'}
-									<Pagination.Item>
-										<Pagination.Ellipsis />
-									</Pagination.Item>
-								{:else}
-									<Pagination.Item>
-										<Pagination.Link
-											{page}
-											on:click={() => (currentPage = page.value)}
-											isActive={currentPage == page.value}
-										>
-											{page.value}
-										</Pagination.Link>
-									</Pagination.Item>
-								{/if}
-							{/each}
-							<Pagination.Item>
-								<Pagination.NextButton
-									on:click={() => (currentPage = currentPage + 1)}
-									disabled={currentPage === pages.length}
-								/>
-							</Pagination.Item>
-						</Pagination.Content>
-					</Pagination.Root>
-					
+						<Pagination.Root count={$filteredItems.length} perPage={itemsPerPage} let:pages>
+							<Pagination.Content>
+								<Pagination.Item>
+									<Pagination.PrevButton
+										on:click={() => (currentPage = currentPage - 1)}
+										disabled={currentPage === 1}
+									/>
+								</Pagination.Item>
+								{#each pages as page (page.key)}
+									{#if page.type === 'ellipsis'}
+										<Pagination.Item>
+											<Pagination.Ellipsis />
+										</Pagination.Item>
+									{:else}
+										<Pagination.Item>
+											<Pagination.Link
+												{page}
+												on:click={() => (currentPage = page.value)}
+												isActive={currentPage == page.value}
+											>
+												{page.value}
+											</Pagination.Link>
+										</Pagination.Item>
+									{/if}
+								{/each}
+								<Pagination.Item>
+									<Pagination.NextButton
+										on:click={() => (currentPage = currentPage + 1)}
+										disabled={currentPage === pages.length}
+									/>
+								</Pagination.Item>
+							</Pagination.Content>
+						</Pagination.Root>
 					{/if}
 				</div>
 			</div>

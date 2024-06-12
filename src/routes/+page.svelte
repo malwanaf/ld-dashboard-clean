@@ -6,38 +6,54 @@
 	import Button from '$lib/components/ui/button/button.svelte';
 	import { slide } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
-    import { DoubleArrowDown } from 'svelte-radix';
+    import { DoubleArrowDown, Enter } from 'svelte-radix';
     import { DoubleArrowUp } from 'svelte-radix';
+	import {EnterFullScreen} from 'svelte-radix';
+	import * as Tooltip from "$lib/components/ui/tooltip";
 
 	let paneOne: PaneAPI;
-	let collapsed = false;
-    
-    function togglePane() {
-        if (collapsed) {
-            paneOne.expand();
-            paneOne.resize(50);
+	let currentState = 0; // 0: collapsed, 1: size 50, 2: size 100
 
-            
-        } else {
-            paneOne.collapse();
-            
-        }
-    }
+	function togglePane() {
+		if (currentState === 0) {
+			paneOne.expand();
+			paneOne.resize(50);
+			currentState = 1;
+		} else if (currentState === 1) {
+			paneOne.resize(100);
+			currentState = 2;
+		} else {
+			paneOne.collapse();
+			currentState = 0;
+		}
+	}
 </script>
 
-<div class="absolute bottom-0 right-0 z-20 mr-2 space-y-2 ">
-		<Button class="rounded-b-none"
-			on:click={() => {
-				togglePane();}}
-		>
-				{#if collapsed}
-				<DoubleArrowUp size={20} class="stroke-1 stroke-white dark:stroke-black" />
+<div class="absolute bottom-0 right-0 z-20 mr-2 space-y-2">
+	<Tooltip.Root>
+		<Tooltip.Trigger>			
+			<Button class="rounded-b-none" on:click={togglePane}>
+				{#if currentState === 0}
+					<DoubleArrowUp size={20} class="stroke-1 stroke-white dark:stroke-black" />
+				{:else if currentState === 2}
+					<DoubleArrowDown size={20} class="stroke-1 stroke-white dark:stroke-black" />
 				{:else}
-				<DoubleArrowDown size={20} class="stroke-1 stroke-white dark:stroke-black" />
+					<EnterFullScreen size={20} class="stroke-1 stroke-white dark:stroke-black" />
 				{/if}
-
-            
-		</Button>
+			</Button>
+		</Tooltip.Trigger>
+		<Tooltip.Content>
+			<p class="text-sm leading-7 [&:not(:first-child)]:mt-6">
+			{#if currentState ===0}
+			Show Data Table
+			{:else if currentState === 2}
+			Minimize
+			{:else}
+			Maximize
+			{/if}</p>
+		</Tooltip.Content>
+	  </Tooltip.Root>
+	
 </div>
 
 <Resizable.PaneGroup direction="vertical" class="max-w-screen min-h-screen">
@@ -53,8 +69,6 @@
 		collapsible={true}
 		minSize={0}
 		bind:pane={paneOne}
-		onCollapse={() => (collapsed = true)}
-		onExpand={() => (collapsed = false)}
 	>
 		<div class="h-full items-center justify-center p-2">
 			<StrikesTable />

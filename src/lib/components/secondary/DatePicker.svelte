@@ -16,6 +16,7 @@
     import Slider from "$lib/components/ui/slider/slider.svelte";
 	import { distanceRangeFilter } from "$lib/stores/distanceFilter";
     import { maxDistance } from "$lib/stores/maxDistance";
+    import { Radiobutton } from "svelte-radix";
     // Formatter for displaying dates
     const df = new DateFormatter("id-ID", {
       dateStyle: "medium",
@@ -46,7 +47,7 @@
           {:else if startValue}
             {df.format(startValue.toDate(getLocalTimeZone()))}
           {:else}
-            Pick a date
+            Pick a date 
           {/if}
         </Button>
       </Popover.Trigger>
@@ -63,11 +64,46 @@
     
   </div>
 
-  
-  <div class="flex flex-row w-full items-center gap-2 space-x-2">
+  <div class="grid gap-2">
+    <Popover.Root openFocus>
+      <Popover.Trigger asChild let:builder>
+        <Button
+          variant="outline"
+          class={cn(
+            "w-auto justify-start text-left font-normal",
+            !{$distanceRangeFilter} && "text-muted-foreground"
+          )}
+          builders={[builder]}
+        >
+        <Radiobutton class="mr-2 h-4 w-4" />
+        {#if $distanceRangeFilter}  
+        {$distanceRangeFilter[0]} km - {$distanceRangeFilter[1]} km
+        {:else}
+        Pick a distance range
+        {/if}
+
+
+        
+
+        </Button>
+      </Popover.Trigger>
+      <Popover.Content class="w-80 p-4" align="start">
+        <div class="flex flex-col w-[100%] items-center gap-2">
+          {#if $maxDistance > 0}
+          <Slider bind:value={$distanceRangeFilter} max={$maxDistance} step={1} class="max-w-[100%]" />
+        {:else}
+          <Slider bind:value={$distanceRangeFilter} max={100} step={1} class="max-w-[100%]" />
+        {/if}
+    </div>
+      </Popover.Content>
+    </Popover.Root>
     
-        <label class="text-xs" for="distance-range">Distance Range :</label>
-        <label class="text-xs font-semibold" for="distance-range"> {$distanceRangeFilter[0]} - {$distanceRangeFilter[1]}</label>
+  </div>
+  
+  <!-- <div class="flex flex-row w-full items-center gap-2 space-x-2">
+    
+        <label class="text-sm" for="distance-range">Distance Range :</label>
+        <label class="text-sm font-semibold min-w-[13%] max-w-[13%]" for="distance-range"> {$distanceRangeFilter[0]} km - {$distanceRangeFilter[1]} km</label>
     
     
         {#if $maxDistance > 0}
@@ -75,6 +111,6 @@
       {:else}
         <Slider bind:value={$distanceRangeFilter} max={100} step={1} class="max-w-[30%]" />
       {/if}
-  </div>
+  </div> -->
 
   

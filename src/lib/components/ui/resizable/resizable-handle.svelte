@@ -21,8 +21,8 @@
 	)}
 >
 	{#if withHandle}
-		<div class="z-10 flex h-14 w-12 items-center justify-center rounded-sm border bg-border">
-			<DragHandleDots2 class="h-12 w-12" />
+		<div class="z-10 flex h-10 w-8 items-center justify-center rounded-sm border bg-border">
+			<DragHandleDots2 class="h-8 w-8" />
 		</div>
 	{/if}
 </ResizablePrimitive.PaneResizer>
