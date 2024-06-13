@@ -2,7 +2,7 @@
     import { fade } from 'svelte/transition';
     import { onMount, onDestroy } from 'svelte';
     import { writable } from 'svelte/store';
-    import { strikesresult } from '$lib/stores/strikes';
+    import { forLatestStrikesResult, strikesresult } from '$lib/stores/strikes';
     import ExclamationTriangle from 'svelte-radix/ExclamationTriangle.svelte';
     import * as Alert from '$lib/components/ui/alert';
     import { Badge } from '$lib/components/ui/badge';
@@ -43,8 +43,10 @@
     //     });
     // });
 
-	$: console.log($strikesresult);
-    $: latestStrike = $strikesresult.length ? $strikesresult[$strikesresult.length - 1] : null;
+	// $: console.log($strikesresult);
+    // $: latestStrike = $strikesresult.length ? $strikesresult[$strikesresult.length - 1] : null;
+
+    $: latestStrike = $forLatestStrikesResult.length ? $forLatestStrikesResult[$forLatestStrikesResult.length - 1] : null;
 
     function formatCalendar(dateStr) {
 		let dateObj = new Date(dateStr);

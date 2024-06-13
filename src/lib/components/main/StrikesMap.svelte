@@ -9,6 +9,7 @@
 	import StrikeIndicator from '$lib/components/secondary/StrikeIndicator.svelte';
 	import DigitalClock from '$lib/components/secondary/DigitalClock.svelte';
 	let websocketIndicatorColor = 'red';
+	import LineChart from '$lib/components/secondary/LineChart.svelte';
 
 	import { strikesresult } from '$lib/stores/strikes';
 	import { dbstatus } from '$lib/stores/dbstatus';
@@ -33,11 +34,11 @@
 	</div>
 
 	<div class="absolute top-0 right-0 z-20 m-2">
-		<StrikeIndicator />
+		<LineChart />
 	</div>
 
 	<div class="absolute bottom-0 left-0 z-30 m-2">
-		<LightningPopup />
+		<!-- <LightningPopup /> -->
 	</div>
 
 	<div class="h-full w-full">
