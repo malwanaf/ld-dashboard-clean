@@ -20,6 +20,8 @@
 	import Cross2 from 'svelte-radix/Cross2.svelte';
 	import * as Tooltip from "$lib/components/ui/tooltip";
 	import { showedItemsId } from '$lib/stores/showedItems';
+	
+	
 	// Store to keep the selected rows per page value
 	const rowsPerPage = writable(10);
 

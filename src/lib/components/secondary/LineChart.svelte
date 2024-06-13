@@ -1,149 +1,307 @@
 <script lang="ts">
-    import { Chart, Button, Dropdown, DropdownItem } from 'flowbite-svelte';
+    import { Chart} from 'flowbite-svelte';
     import { ChevronDownOutline, ChevronRightOutline } from 'flowbite-svelte-icons';
     import { onMount } from 'svelte';
     import { strikesresult } from '$lib/stores/strikes.ts';
     import { format, subDays, startOfDay, endOfDay } from 'date-fns';
     import * as Card from "$lib/components/ui/card";
+    import { Button } from '$lib/components/ui/button';
+    import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
+    import { setMode, mode } from 'mode-watcher';
 
-    const getColor = (intensity) => {
-        if (intensity <= 5) return 'green';
-        else if (intensity > 5 && intensity <= 10) return 'orange';
-        else return 'red';
-    };
+    
 
     let selectedData = [];
     let allData = [];
 
     const updateChart = () => {
-        const categories = selectedData.map(d => format(new Date(d.time), 'HH:mm:ss'));
-        const data = selectedData.map(d => ({
-            x: format(new Date(d.time), 'HH:mm:ss'),
-            y: d.distance,
-            fillColor: getColor(d.intensity)
-        }));
+    // Define the interval for the time points you want to display
+    let timeLabelInterval = 5;
+    if(position=="1"){
+        timeLabelInterval = 5;
+    }else if (position=="2"){
+        timeLabelInterval = 50;
+    }else if (position=="3"){
+        timeLabelInterval = 10;
+    }else if (position=="4"){
+        timeLabelInterval = 20;
+    }else if (position=="5"){
+        timeLabelInterval = 30;
+    }
 
-        options.xaxis.categories = categories;
-        options.series[0].data = data.map(d => d.y);
-        options.colors = data.map(d => d.fillColor);
-    };
-
-    const options = {
-        series: [
-            {
-                name: 'Lightning Distance',
-                data: []
-            }
-        ],
-        colors: [],
-        chart: {
-            type: 'bar',
-            height: '240px',
-            fontFamily: 'Inter, sans-serif',
-            toolbar: {
-                show: true
-            },
-            background: 'rgba(0, 0, 0, 0)', // Latar belakang hitam dengan opacity 50%
-            foreColor: '#FFFFFF', // Warna teks putih
-            border: {
-                borderColor: '#FFFFFF', // Warna border putih
-                borderWidth: 1, // Lebar border
-            }
-        },
-        plotOptions: {
-            bar: {
-                horizontal: false,
-                columnWidth: '30%', // Lebar bar diperkecil
-                borderRadiusApplication: 'end',
-                borderRadius: 2
-            }
-        },
-        tooltip: {
-            shared: true,
-            intersect: false,
-            style: {
-                fontFamily: 'Inter, sans-serif'
-            }
-        },
-        states: {
-            hover: {
-                filter: {
-                    type: 'darken',
-                    value: 1
-                }
-            }
-        },
-        stroke: {
-            show: true,
-            width: 1,
-            colors: ['white']
-        },
-        grid: {
-            show: true,
-            strokeDashArray: 4,
-            padding: {
-                left: 5,
-                right: 2,
-                top: 14
-            }
-        },
-        dataLabels: {
-            enabled: false
-        },
-        legend: {
-            show: true, // Tampilkan legenda
-            position: 'bottom', // Posisi legenda di bawah chart
-            labels: {
-                colors: '#FFFFFF', // Warna teks legenda putih
-                useSeriesColors: false
-            }
-        },
-        xaxis: {
-            floating: false,
-            labels: {
-                show: true,
-                style: {
-                    fontFamily: 'Inter, sans-serif',
-                    cssClass: 'text-xs font-normal fill-gray-500 dark:fill-gray-400'
-                }
-            },
-            axisBorder: {
-                show: false
-            },
-            axisTicks: {
-                show: false
-            },
-            categories: [], // Tambahkan kategori untuk memastikan label sumbu x diformat dengan benar
-            title: {
-                text: 'Time',
-                style: {
-                    color: '#FFFFFF',
-                    fontFamily: 'Inter, sans-serif'
-                }
-            }
-        },
-        yaxis: {
-            show: true,
-            title: {
-                text: 'Distance',
-                style: {
-                    color: '#FFFFFF',
-                    fontFamily: 'Inter, sans-serif'
-                }
-            }
-        },
-        fill: {
-            opacity: 1,
-            colors: []
+    // Format and filter the time points
+    const categories = selectedData.map((d, i) => {
+        
+        let formattedTime = format(new Date(d.time), 'dd/MM');
+        if(position=="1"){
+        formattedTime = format(new Date(d.time), 'HH:mm:ss');
+        }else if (position=="2"){
+            formattedTime = format(new Date(d.time), 'dd/MM');;
+        }else if (position=="3"){
+            formattedTime = format(new Date(d.time), 'dd/MM');;
+        }else if (position=="4"){
+            formattedTime = format(new Date(d.time), 'dd/MM');;
+        }else if (position=="5"){
+            formattedTime = format(new Date(d.time), 'dd/MM');;
         }
-    };
+
+
+        // Only include every nth time point
+        return i % timeLabelInterval === 0 ? formattedTime : '';
+    });
+
+    // Map the data with the required format
+    const data = selectedData.map(d => ({
+        x: format(new Date(d.time), 'dd/MM/yyyy HH:mm:ss'),
+        y: d.distance,
+        fillColor: d.intensity <= 5 ? 'green' : (d.intensity > 5 && d.intensity <= 10 ? 'orange' : 'red')
+    }));
+
+    // Update the chart options
+    options.xaxis.categories = categories;
+    options.series[0].data = data.map(d => d.y);
+    options.colors = data.map(d => d.fillColor);
+};
+
+
+
+
+   
+const optionsDark = {
+    series: [
+        {
+            name: 'Distance',
+            data: []
+            
+        }
+    ],
+    colors: [],
+    chart: {
+        type: 'bar',
+        height: '240px',
+        toolbar: {
+            show: true
+        },
+        background: 'rgba(0, 0, 0, 0)', // Latar belakang hitam dengan opacity 50%
+        foreColor: '#FFFFFF', // Warna teks putih
+        border: {
+            borderColor: '#FFFFFF', // Warna border putih
+            borderWidth: 1 // Lebar border
+        }
+    },
+    plotOptions: {
+        bar: {
+            horizontal: false,
+            columnWidth: '30%', // Lebar bar diperkecil
+            borderRadiusApplication: 'end',
+            borderRadius: 2
+        }
+    },
+    tooltip: {
+        shared: true,
+        intersect: false,
+        style: {}
+    },
+    states: {
+        hover: {
+            filter: {
+                type: 'darken',
+                value: 1
+            }
+        }
+    },
+    stroke: {
+        show: true,
+        width: 1,
+        colors: ['white']
+    },
+    grid: {
+        show: true,
+        strokeDashArray: 4,
+        padding: {
+            left: 5,
+            right: 2,
+            top: 14
+        }
+    },
+    dataLabels: {
+        enabled: false
+    },
+    legend: {
+        show: true, // Tampilkan legenda
+        position: 'bottom', // Posisi legenda di bawah chart
+        labels: {
+            colors: '#FFFFFF', // Warna teks legenda putih
+            useSeriesColors: false
+        }
+    },
+    xaxis: {
+        floating: false,
+        labels: {
+            show: true,
+            rotate: 0, // Keep labels horizontal
+            style: {
+                cssClass: 'text-xs font-normal fill-gray-500 dark:fill-gray-400'
+            }
+        },
+        axisBorder: {
+            show: false
+        },
+        axisTicks: {
+            show: false
+        },
+        categories: [], // Tambahkan kategori untuk memastikan label sumbu x diformat dengan benar
+        title: {
+            text: 'Time',
+            style: {
+                color: '#FFFFFF',
+                fontWeight: 600,
+                fontFamily: "ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji"
+            }
+        }
+    },
+    yaxis: {
+        show: true,
+        title: {
+            text: 'Distance',
+            style: {
+                color: '#FFFFFF',
+                fontWeight: 600,
+                fontFamily: "ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji"
+            }
+        }
+    },
+    fill: {
+        opacity: 1,
+        colors: []
+    }
+};
+
+const optionsLight = {
+    series: [
+        {
+            name: 'Distance',
+            data: []
+        }
+    ],
+    colors: [],
+    chart: {
+        type: 'bar',
+        height: '240px',
+        toolbar: {
+            show: true
+        },
+        background: 'rgba(0, 0, 0, 0)', // Latar belakang hitam dengan opacity 50%
+        foreColor: '#FFFFFF', // Warna teks putih
+        border: {
+            borderColor: '#FFFFFF', // Warna border putih
+            borderWidth: 1 // Lebar border
+        }
+    },
+    plotOptions: {
+        bar: {
+            horizontal: false,
+            columnWidth: '30%', // Lebar bar diperkecil
+            borderRadiusApplication: 'end',
+            borderRadius: 2
+        }
+    },
+    tooltip: {
+        shared: true,
+        intersect: false,
+        style: {}
+    },
+    states: {
+        hover: {
+            filter: {
+                type: 'darken',
+                value: 1
+            }
+        }
+    },
+    stroke: {
+        show: true,
+        width: 1,
+        colors: ['white']
+    },
+    grid: {
+        show: true,
+        strokeDashArray: 4,
+        padding: {
+            left: 5,
+            right: 2,
+            top: 14
+        }
+    },
+    dataLabels: {
+        enabled: false
+    },
+    legend: {
+        show: true, // Tampilkan legenda
+        position: 'bottom', // Posisi legenda di bawah chart
+        labels: {
+            colors: '#FFFFFF', // Warna teks legenda putih
+            useSeriesColors: false
+        }
+    },
+    xaxis: {
+        floating: false,
+        labels: {
+            show: true,
+            rotate: 0, // Keep labels horizontal
+            style: {
+                cssClass: 'text-xs font-normal fill-gray-500 dark:fill-gray-400'
+            }
+        },
+        axisBorder: {
+            show: false
+        },
+        axisTicks: {
+            show: false
+        },
+        categories: [], // Tambahkan kategori untuk memastikan label sumbu x diformat dengan benar
+        title: {
+            text: 'Time',
+            style: {
+                color: '#FFFFFF',
+                fontWeight: 600,
+                fontFamily: "ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji"
+            }
+        }
+    },
+    yaxis: {
+        show: true,
+        title: {
+            text: 'Distance',
+            style: {
+                color: '#FFFFFF',
+                fontWeight: 600,
+                fontFamily: "ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji"
+            }
+        }
+    },
+    fill: {
+        opacity: 1,
+        colors: []
+    }
+};
+
+
+    import {Badge} from '$lib/components/ui/badge'
+    let options;
+    if ($mode === 'light') {
+			options = optionsLight;
+		} else {
+			options = optionsDark;
+		}
 
     onMount(() => {
         const unsubscribe = strikesresult.subscribe((strikesData) => {
             // Store all data
             allData = strikesData;
             // Update selected data with the latest strikes data
-            selectedData = strikesData; // Update with the last 5 strikes
+            selectedData = strikesData; 
+            filterData('Last 7 days');// Update with the last 5 strikes
             updateChart(); // Call updateChart to update the chart options
         });
 
@@ -175,9 +333,8 @@
                 const last30Days = subDays(now, 30);
                 filteredData = allData.filter(d => new Date(d.time) >= last30Days);
                 break;
-            case 'Last 90 days':
-                const last90Days = subDays(now, 90);
-                filteredData = allData.filter(d => new Date(d.time) >= last90Days);
+            case 'All Time':                
+                filteredData = allData
                 break;
             default:
                 filteredData = allData;
@@ -186,54 +343,55 @@
         selectedData = filteredData; // Update with the filtered data
         updateChart(); // Call updateChart to update the chart options
     };
+
+    let position = "3";
+
+    
 </script>
 
-<Card.Root>
-    <Card.Header>
+<Card.Root class="bg-black/75 dark:bg-black/75 border-black">
+    <!-- <Card.Header>
       <Card.Title>Card Title</Card.Title>
       <Card.Description>Card Description</Card.Description>
-    </Card.Header>
-    <Card.Content>
-      <p>Card Content</p>
+    </Card.Header> -->
+    <Card.Content class="mt-2">
+      
 
 
 
-    <h1 class="flex justify-center uppercase text-sm font-bold px-7 py-2 hover:no-underline">Lightning Graphic</h1>
-        <div class="flex justify-between items-center pt-0">
-            <div class="relative border-black-500 border-t">
-                <Button class="uppercase text-sm font-semibold hover:text-primary-700 dark:hover:text-primary-500 hover:bg-gray-100 dark:hover:bg-gray-700 dark:focus:ring-gray-700 dark:border-gray-700 px-7 py-2 hover:no-underline">
-                    Select Day
-                    <ChevronDownOutline class="w-3 m-2 ms-14" />
-                </Button>
-                <Dropdown class="w-40 absolute top-10 right-10 border-black-200 border-t dark:border-gray-700 justify-between" offset="6">
-                    <DropdownItem on:click={() => filterData('Yesterday')} style="background-color: rgba(0, 0, 0, 0); color: white;">Yesterday</DropdownItem>
-                    <DropdownItem on:click={() => filterData('Today')} style="background-color: rgba(0, 0, 0, 0); color: white;">Today</DropdownItem>
-                    <DropdownItem on:click={() => filterData('Last 7 days')} style="background-color: rgba(0, 0, 0, 0); color: white;">Last 7 days</DropdownItem>
-                    <DropdownItem on:click={() => filterData('Last 30 days')} style="background-color: rgba(0, 0, 0, 0); color: white;">Last 30 days</DropdownItem>
-                    <DropdownItem on:click={() => filterData('Last 90 days')} style="background-color: rgba(0, 0, 0, 0); color: white;">Last 90 days</DropdownItem>
-                </Dropdown>
+    <!-- <h1 class="flex justify-center uppercase text-sm font-bold px-7 py-2 hover:no-underline text-white">Lightning Graphic</h1> -->
+        <div class="flex justify-between items-center pt-2">
+
+
+            <div class="relative">
+                <DropdownMenu.Root>
+                    <DropdownMenu.Trigger asChild let:builder>
+                      <Button variant="outline" builders={[builder]}>{position === "1" ? 'Today' : position === "2" ? 'Yesterday' : position === "3" ? 'Last 7 days' : position === "4" ? 'Last 30 days' : 'Select Time Range'}
+
+                        <ChevronDownOutline class="w-3 m-2 ms-14" />
+                      </Button>
+
+                      
+                    </DropdownMenu.Trigger>
+                    <DropdownMenu.Content class="w-56">
+                      <!-- <DropdownMenu.Label>Time Range</DropdownMenu.Label> -->
+                      <DropdownMenu.Separator />
+                      <DropdownMenu.RadioGroup bind:value={position}>
+                        <DropdownMenu.RadioItem value="1" on:click={() => filterData('Today')}>Today</DropdownMenu.RadioItem>
+                        <DropdownMenu.RadioItem value="2" on:click={() => filterData('Yesterday')}>Yesterday</DropdownMenu.RadioItem>
+                        <DropdownMenu.RadioItem value="3" on:click={() => filterData('Last 7 days')}>Last 7 Days</DropdownMenu.RadioItem>
+                        <DropdownMenu.RadioItem value="4" on:click={() => filterData('Last 30 days')} >Last 30 Days</DropdownMenu.RadioItem>
+                        <DropdownMenu.RadioItem value="5" on:click={() => filterData('All Time')} >All Time</DropdownMenu.RadioItem>
+                      </DropdownMenu.RadioGroup>
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Root>
+               
             </div>
-            <a href="/data-table" class="uppercase text-sm font-semibold hover:text-primary-700 dark:hover:text-primary-500 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 dark:focus:ring-gray-700 dark:border-gray-700 px-7 py-2 hover:underline">
-                Lightning Report
-                <ChevronRightOutline class="w-2.5 h-2.5 ms-1.5" />
-            </a>
+           
         </div>
-    <Chart {options} />
+    <Chart {options} class="dark:text-black text-black " />
 
-    <div class="flex justify-center mt-4">
-        <div class="flex items-center mr-4">
-            <div class="w-4 h-4 bg-blue-500 mr-2"></div>
-            <span class="">Intensity ≤ 5</span>
-        </div>
-        <div class="flex items-center mr-4">
-            <div class="w-4 h-4 bg-orange-500 mr-2"></div>
-            <span class="">5 &lt; Intensity ≤ 10</span>
-        </div>
-        <div class="flex items-center">
-            <div class="w-4 h-4 bg-red-500 mr-2"></div>
-            <span class="">Intensity &gt; 10</span>
-        </div>
-    </div>
+   
 
 
 </Card.Content>

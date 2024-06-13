@@ -9,8 +9,8 @@ import {
   } from "@internationalized/date";
 
 // Initializing start and end dates
-const start = today(getLocalTimeZone());
-const end = start.add({ days: 7 });
+const end = today(getLocalTimeZone());
+const start = end.subtract({ days: 7 });
 
 // Creating a writable store with initial value
 export const dateRange = writable({
