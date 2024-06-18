@@ -324,7 +324,7 @@
 					
 
 
-						{#if !$strikesresult || $strikesresult.length === 0}
+						{#if !$strikesresult || $strikesresult.length === 0 && $dbstatus === 'green' && !isLoading}
 							<Table.Row>
 								<Table.Cell colspan="5" class="items-center">
 									<div class="flex items-center space-x-2">

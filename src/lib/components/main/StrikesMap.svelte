@@ -36,8 +36,8 @@
 		</Badge>
 	</div>
 
-	<div class="absolute top-0 right-0 z-20 m-2">
-		<Collapsible.Root class="w-[350px] space-y-2 bg-black/75 rounded-lg">
+	<div class="absolute top-0 right-0 z-20 m-2 ">
+		<Collapsible.Root class="w-[350px] space-y-2 bg-black/70 rounded-lg">
 			<div class="flex items-center justify-between space-x-4 px-4 py-1">
 			  <h4 class="text-sm font-semibold p-2 text-white">Lightning Chart</h4>
 			  <Collapsible.Trigger asChild let:builder>

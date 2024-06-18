@@ -32,7 +32,7 @@
 <div class="absolute bottom-0 right-0 z-20 mr-2 space-y-2">
 	<Tooltip.Root>
 		<Tooltip.Trigger>			
-			<Button class="rounded-b-none" on:click={togglePane}>
+			<Button variant="default" class="rounded-b-none" on:click={togglePane}>
 				{#if currentState === 0}
 					<DoubleArrowUp size={20} class="stroke-1 stroke-white dark:stroke-black" />
 				{:else if currentState === 2}

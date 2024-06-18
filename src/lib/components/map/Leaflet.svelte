@@ -38,14 +38,19 @@
 			}
 		).addTo(map);
 
-		let Stadia_StamenTerrainLabels = L.tileLayer(
-			'https://tiles.stadiamaps.com/tiles/stamen_terrain_labels/{z}/{x}/{y}{r}.{ext}',
-			{
-				minZoom: 0,
-				maxZoom: 19,
-				ext: 'png'
-			}
-		).addTo(map);
+		// let Stadia_StamenTerrainLabels = L.tileLayer(
+		// 	'https://tiles.stadiamaps.com/tiles/stamen_terrain_labels/{z}/{x}/{y}{r}.{ext}',
+		// 	{
+		// 		minZoom: 0,
+		// 		maxZoom: 19,
+		// 		ext: 'png'
+		// 	}
+		// ).addTo(map);
+
+		let OpenStreetMap_Mapnik = L.tileLayer('http://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}.png', {
+			maxZoom: 19,
+			minZoom: 0,
+		}).addTo(map);
 
 		let center = [51.5, -0.09]; // Default center if not provided
 

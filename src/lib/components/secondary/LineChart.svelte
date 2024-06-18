@@ -191,7 +191,7 @@ const optionsLight = {
         toolbar: {
             show: true
         },
-        background: 'rgba(0, 0, 0, 0)', // Latar belakang hitam dengan opacity 50%
+        background: 'rgba(255, 0, 0, 0)', // Latar belakang hitam dengan opacity 50%
         foreColor: '#FFFFFF', // Warna teks putih
         border: {
             borderColor: '#FFFFFF', // Warna border putih
@@ -349,12 +349,12 @@ const optionsLight = {
     
 </script>
 
-<Card.Root class="bg-black/75 dark:bg-black/75 border-black">
+<Card.Root class="border-none bg-black/10">
     <!-- <Card.Header>
       <Card.Title>Card Title</Card.Title>
       <Card.Description>Card Description</Card.Description>
     </Card.Header> -->
-    <Card.Content class="mt-2">
+    <Card.Content class="mt-2  bg-transparent">
       
 
 
